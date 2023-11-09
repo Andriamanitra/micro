@@ -46,7 +46,7 @@ rules:
     - symbol.operator: ":=?"
 
     # Attribute
-    - bracket:
+    - symbol.brackets:
         start: "^\\["
         end: "\\]"
         rules:
