@@ -784,6 +784,7 @@ func (h *BufPane) ReplaceCmd(args []string) {
 
 	if noRegex {
 		search = regexp.QuoteMeta(search)
+		replaceStr = strings.ReplaceAll(replaceStr, "$", "$$")
 	}
 
 	replace := []byte(replaceStr)
