@@ -200,6 +200,84 @@ async function loadPersisted() {
   }
 }
 
+const SEED_FILES = {
+  [HOME_DIR + "/fibonacci.py"]: `#!/usr/bin/env python3
+from functools import cache
+
+@cache
+def fibonacci(n: int) -> int:
+    if n < 2:
+        return n
+    return fibonacci(n-1) + fibonacci(n-2)
+
+if __name__ == "__main__":
+    print(fibonacci(42))
+`,
+};
+
+function seedFiles() {
+  const encoder = new TextEncoder();
+  let changed = false;
+  for (const [path, contents] of Object.entries(SEED_FILES)) {
+    const norm = normalize(path);
+    if (nodes.has(norm)) continue;
+    ensureParents(norm);
+    nodes.set(norm, {
+      type: "file",
+      data: encoder.encode(contents),
+      mtime: Date.now(),
+    });
+    changed = true;
+  }
+  if (changed) markDirty();
+}
+
+// Read ?colorscheme=<url> from the page URL, download the .micro colorscheme
+// file from that URL (e.g. a raw.githubusercontent.com link), write it into
+// the virtual filesystem, and tell micro to switch to it.
+async function applyColorschemeFromQuery() {
+  const params = new URLSearchParams(window.location.search);
+  const src = params.get("colorscheme");
+  if (!src) return;
+  if (!src.startsWith("http")) return src;
+
+  let text;
+  try {
+    const res = await fetch(src);
+    if (!res.ok) throw new Error("HTTP " + res.status);
+    text = await res.text();
+  } catch (e) {
+    console.warn("micro wasm: failed to fetch colorscheme", e);
+    showToast("Failed to fetch colorscheme");
+    return;
+  }
+
+  // Derive a filename from the URL, e.g. ".../colorschemes/gruvbox.micro" -> "gruvbox.micro"
+  let filename;
+  try {
+    filename = decodeURIComponent(new URL(src).pathname.split("/").pop() || "");
+  } catch (e) {
+    filename = src.split("/").pop() || "";
+  }
+  filename = filename.split("?")[0].split("#")[0];
+  if (!filename) filename = "custom.micro";
+  if (!filename.endsWith(".micro")) filename += ".micro";
+
+  const dir = HOME_DIR + "/.config/micro/colorschemes";
+  const path = normalize(dir + "/" + filename);
+
+  ensureParents(path);
+  nodes.set(path, {
+    type: "file",
+    data: new TextEncoder().encode(text),
+    mtime: Date.now(),
+  });
+  markDirty();
+
+  let name = filename.slice(0, -6);
+  return name;
+}
+
 // Delete every file and directory in the virtual filesystem, persist the empty
 // tree, and reload the page so micro boots against a clean filesystem.
 async function resetFilesystem() {
@@ -775,6 +853,8 @@ async function saveToPicker() {
 
 async function boot() {
   await loadPersisted();
+  let colorscheme = await applyColorschemeFromQuery();
+  seedFiles();
   initTerminal();
 
   const openBtn = document.getElementById("open-btn");
@@ -790,10 +870,15 @@ async function boot() {
     resetBtn.addEventListener("click", resetFilesystem);
   }
 
-  const goArgs = [];
+  const cliArgs = [];
+  if (colorscheme) {
+    cliArgs.push("-colorscheme", colorscheme);
+  }
+  cliArgs.push("fibonacci.py");
+  console.log({cliArgs});
 
   const go = new globalThis.Go();
-  go.argv = ["micro", ...goArgs];
+  go.argv = ["micro", ...cliArgs];
   go.env = {
     HOME: HOME_DIR,
     XDG_CONFIG_HOME: HOME_DIR + "/.config",
