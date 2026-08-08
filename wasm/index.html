@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>micro editor</title>
+    <link rel="stylesheet" href="xterm.css" />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <header class="toolbar">
+      <span class="brand">micro</span>
+      <button id="open-btn" title="Open a file from your computer">Open file</button>
+      <button id="save-btn" title="Save the current buffer to your computer">
+        Save to computer
+      </button>
+      <button
+        id="reset-btn"
+        class="danger"
+        title="Delete every file in the virtual filesystem and start over"
+      >
+        Reset filesystem
+      </button>
+      <span class="spacer"></span>
+    </header>
+    <main id="terminal"></main>
+    <div id="toast" class="toast"></div>
+
+    <div id="save-modal" class="modal hidden">
+      <div class="modal-box">
+        <h3>Save to computer</h3>
+        <p class="modal-sub">
+          Choose a file in <code id="save-cwd">/home/user</code> to save the
+          current buffer into, or type a new name. The file is then downloaded
+          to your computer.
+        </p>
+        <select id="save-select"></select>
+        <input id="save-name" type="text" placeholder="file name" />
+        <div class="modal-actions">
+          <button id="save-cancel">Cancel</button>
+          <button id="save-confirm" class="primary">Save &amp; download</button>
+        </div>
+      </div>
+    </div>
+
+    <script src="wasm_exec.js"></script>
+    <script src="xterm.js"></script>
+    <script src="addon-fit.js"></script>
+    <script src="micro.js"></script>
+  </body>
+</html>

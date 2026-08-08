@@ -6,14 +6,12 @@ import (
 	"io"
 	"log"
 	"os"
-	"os/signal"
 	"path/filepath"
 	"regexp"
 	"runtime"
 	"runtime/pprof"
 	"sort"
 	"strconv"
-	"syscall"
 	"time"
 
 	"github.com/go-errors/errors"
@@ -241,7 +239,12 @@ func LoadInput(args []string) []*buffer.Buffer {
 			btype = buffer.BTStdout
 		}
 
-		if !isatty.IsTerminal(os.Stdin.Fd()) {
+		if runtime.GOOS == "js" {
+			// In the browser stdin is never available and stdout is not a
+			// terminal as far as isatty is concerned, so just open an empty
+			// buffer (BTDefault, not BTStdout, so that it can be saved)
+			buffers = append(buffers, buffer.NewBufferFromStringWithCommand("", "", buffer.BTDefault, command))
+		} else if !isatty.IsTerminal(os.Stdin.Fd()) {
 			// Option 2
 			// The input is not a terminal, so something is being piped in
 			// and we should read from stdin
@@ -379,10 +382,14 @@ func main() {
 
 	util.Sigterm = make(chan os.Signal, 1)
 	sighup = make(chan os.Signal, 1)
-	signal.Notify(util.Sigterm, syscall.SIGTERM, syscall.SIGINT, syscall.SIGQUIT, syscall.SIGABRT)
-	signal.Notify(sighup, syscall.SIGHUP)
+	initSignals()
 
 	m := clipboard.SetMethod(config.GetGlobalOption("clipboard").(string))
+	if runtime.GOOS == "js" {
+		// The browser has no external clipboard tools, so fall back to the
+		// internal clipboard (copying via the browser itself still works).
+		m = clipboard.SetMethod("internal")
+	}
 	clipErr := clipboard.Initialize(m)
 
 	defer func() {

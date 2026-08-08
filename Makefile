@@ -1,4 +1,4 @@
-.PHONY: runtime build generate build-quick
+.PHONY: runtime build generate build-quick build-wasm serve-wasm
 
 VERSION = $(shell GOOS=$(shell go env GOHOSTOS) GOARCH=$(shell go env GOHOSTARCH) \
 	go run tools/build-version.go)
@@ -10,6 +10,7 @@ GOVARS = -X github.com/micro-editor/micro/v2/internal/util.Version=$(VERSION) -X
 DEBUGVAR = -X github.com/micro-editor/micro/v2/internal/util.Debug=ON
 VSCODE_TESTS_BASE_URL = 'https://raw.githubusercontent.com/microsoft/vscode/e6a45f4242ebddb7aa9a229f85555e8a3bd987e2/src/vs/editor/test/common/model/'
 CGO_ENABLED := $(if $(CGO_ENABLED),$(CGO_ENABLED),0)
+WASM_JS = $(shell go env GOROOT)/lib/wasm/wasm_exec.js
 
 ADDITIONAL_GO_LINKER_FLAGS := ""
 GOHOSTOS = $(shell go env GOHOSTOS)
@@ -28,6 +29,16 @@ build-quick:
 
 build-dbg:
 	CGO_ENABLED=$(CGO_ENABLED) go build -trimpath -ldflags "$(ADDITIONAL_GO_LINKER_FLAGS) $(DEBUGVAR)" ./cmd/micro
+
+# build-wasm compiles micro to WebAssembly for the browser. The wasm module
+# does not need version ldflags (util.Version stays "unknown"), so it is kept
+# simple. See wasm/README.md for how to serve and use it.
+build-wasm:
+	cp $(WASM_JS) wasm/wasm_exec.js
+	GOOS=js GOARCH=wasm CGO_ENABLED=0 go build -trimpath -o wasm/main.wasm ./cmd/micro
+
+serve-wasm:
+	python3 -m http.server 8000 -d wasm
 
 build-tags: fetch-tags build
 

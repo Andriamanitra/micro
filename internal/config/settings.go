@@ -455,6 +455,9 @@ func defaultFileFormat() string {
 }
 
 func defaultFakeCursor() bool {
+	if runtime.GOOS == "js" {
+		return true
+	}
 	_, wt := os.LookupEnv("WT_SESSION")
 	if runtime.GOOS == "windows" && !wt {
 		// enabled for windows consoles where the cursor is slow

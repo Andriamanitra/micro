@@ -1,4 +1,4 @@
-//go:build plan9 || nacl || windows
+//go:build plan9 || nacl || windows || (js && wasm)
 
 package action
 

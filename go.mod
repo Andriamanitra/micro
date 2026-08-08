@@ -37,4 +37,11 @@ replace github.com/kballard/go-shellquote => github.com/micro-editor/go-shellquo
 
 replace layeh.com/gopher-luar v1.0.11 => github.com/layeh/gopher-luar v1.0.11
 
+// The micro-editor/tcell fork is checked into the repository under ./tcell
+// so that it can carry the js/wasm screen implementation. The vendored copy
+// is based on upstream v2.0.13 and adds tscreen_wasm.go. Any tcell changes
+// (e.g. a future release that includes wasm support) should land upstream
+// first and this replace should be dropped once micro depends on it.
+replace github.com/micro-editor/tcell/v2 => ./tcell
+
 go 1.19
