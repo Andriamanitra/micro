@@ -946,6 +946,13 @@ func (h *BufPane) CycleAutocompleteBack() bool {
 	return false
 }
 
+// AcceptSuggestion dismisses the autocomplete suggestions
+func (h *BufPane) AcceptSuggestion() bool {
+	ret := h.Buf.HasSuggestions
+	h.Buf.HasSuggestions = false
+	return ret
+}
+
 // InsertTab inserts a tab or spaces
 func (h *BufPane) InsertTab() bool {
 	b := h.Buf

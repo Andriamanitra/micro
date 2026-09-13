@@ -278,6 +278,7 @@ IndentSelection
 OutdentSelection
 Autocomplete
 CycleAutocompleteBack
+AcceptSuggestion
 OutdentLine
 IndentLine
 Paste
@@ -556,7 +557,7 @@ conventions for text editing defaults.
     "CtrlShiftDown":  "SelectToEnd",
     "Alt-{":          "ParagraphPrevious",
     "Alt-}":          "ParagraphNext",
-    "Enter":          "InsertNewline",
+    "Enter":          "AcceptSuggestion|InsertNewline",
     "Ctrl-h":         "Backspace",
     "Backspace":      "Backspace",
     "Alt-CtrlH":      "DeleteWordLeft",
@@ -689,7 +690,7 @@ are given below:
         "CtrlDown":       "CursorEnd",
         "CtrlShiftUp":    "SelectToStart",
         "CtrlShiftDown":  "SelectToEnd",
-        "Enter":          "ExecuteCommand",
+        "Enter":          "AcceptSuggestion|ExecuteCommand",
         "CtrlH":          "Backspace",
         "Backspace":      "Backspace",
         "OldBackspace":   "Backspace",

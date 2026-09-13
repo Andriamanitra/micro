@@ -7,6 +7,7 @@ import (
 	"github.com/micro-editor/micro/v2/internal/config"
 	"github.com/micro-editor/micro/v2/internal/display"
 	"github.com/micro-editor/micro/v2/internal/info"
+	"github.com/micro-editor/micro/v2/internal/screen"
 	"github.com/micro-editor/micro/v2/internal/util"
 	"github.com/micro-editor/tcell/v2"
 )
@@ -33,10 +34,55 @@ func InfoMapEvent(k Event, action string) {
 }
 
 func infoMapKey(k Event, action string) {
-	if f, ok := InfoKeyActions[action]; ok {
-		InfoBindings.RegisterKeyBinding(k, InfoKeyActionGeneral(f))
-	} else if f, ok := BufKeyActions[action]; ok {
-		InfoBufBindings.RegisterKeyBinding(k, BufKeyActionGeneral(f))
+	var actionfns []PaneKeyAction
+	var types []byte
+	var hasInfoAction bool
+
+	for action != "" {
+		idx := util.IndexAnyUnquoted(action, "&|,")
+		a := action
+		typ := byte(' ')
+		if idx >= 0 {
+			a = action[:idx]
+			typ = action[idx]
+			action = action[idx+1:]
+		} else {
+			action = ""
+		}
+
+		var fn PaneKeyAction
+		if f, ok := InfoKeyActions[a]; ok {
+			fn = InfoKeyActionGeneral(f)
+			hasInfoAction = true
+		} else if f, ok := BufKeyActions[a]; ok {
+			fn = infoBufKeyActionGeneral(f)
+		} else {
+			screen.TermMessage("Error in bindings: action", a, "does not exist")
+			continue
+		}
+
+		actionfns = append(actionfns, fn)
+		types = append(types, typ)
+	}
+
+	if len(actionfns) == 0 {
+		return
+	}
+
+	infoAction := func(p Pane) bool {
+		for i, a := range actionfns {
+			success := a(p)
+			if (!success && types[i] == '&') || (success && types[i] == '|') {
+				break
+			}
+		}
+		return true
+	}
+
+	if hasInfoAction {
+		InfoBindings.RegisterKeyBinding(k, infoAction)
+	} else {
+		InfoBufBindings.RegisterKeyBinding(k, infoAction)
 	}
 }
 
@@ -54,6 +100,22 @@ func InfoKeyActionGeneral(a InfoKeyAction) PaneKeyAction {
 		a(p.(*InfoPane))
 		return true
 	}
+}
+
+// infoBufKeyActionGeneral makes a general pane action from a BufKeyAction
+// bound in the command pane, extracting the BufPane from the pane
+func infoBufKeyActionGeneral(a BufKeyAction) PaneKeyAction {
+	return func(p Pane) bool {
+		return a(bufPane(p))
+	}
+}
+
+// bufPane returns the BufPane of the given pane
+func bufPane(p Pane) *BufPane {
+	if ip, ok := p.(*InfoPane); ok {
+		return ip.BufPane
+	}
+	return p.(*BufPane)
 }
 
 type InfoPane struct {

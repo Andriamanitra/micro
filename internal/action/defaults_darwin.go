@@ -136,7 +136,7 @@ var infodefaults = map[string]string{
 	"CtrlDown":       "CursorEnd",
 	"CtrlShiftUp":    "SelectToStart",
 	"CtrlShiftDown":  "SelectToEnd",
-	"Enter":          "ExecuteCommand",
+	"Enter":          "AcceptSuggestion|ExecuteCommand",
 	"CtrlH":          "Backspace",
 	"Backspace":      "Backspace",
 	"OldBackspace":   "Backspace",

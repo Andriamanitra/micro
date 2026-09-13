@@ -788,6 +788,7 @@ var BufKeyActions = map[string]BufKeyAction{
 	"OutdentSelection":          (*BufPane).OutdentSelection,
 	"Autocomplete":              (*BufPane).Autocomplete,
 	"CycleAutocompleteBack":     (*BufPane).CycleAutocompleteBack,
+	"AcceptSuggestion":          (*BufPane).AcceptSuggestion,
 	"OutdentLine":               (*BufPane).OutdentLine,
 	"IndentLine":                (*BufPane).IndentLine,
 	"Paste":                     (*BufPane).Paste,
