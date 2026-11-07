@@ -9,7 +9,8 @@ GOBIN ?= $(shell go env GOPATH)/bin
 GOVARS = -X github.com/micro-editor/micro/v2/internal/util.Version=$(VERSION) -X github.com/micro-editor/micro/v2/internal/util.CommitHash=$(HASH) -X 'github.com/micro-editor/micro/v2/internal/util.CompileDate=$(DATE)'
 DEBUGVAR = -X github.com/micro-editor/micro/v2/internal/util.Debug=ON
 VSCODE_TESTS_BASE_URL = 'https://raw.githubusercontent.com/microsoft/vscode/e6a45f4242ebddb7aa9a229f85555e8a3bd987e2/src/vs/editor/test/common/model/'
-CGO_ENABLED := $(if $(CGO_ENABLED),$(CGO_ENABLED),0)
+CGO_ENABLED := 1
+export PKG_CONFIG_PATH ?= $(CURDIR)/build/libghostty/prefix/lib/pkgconfig
 
 ADDITIONAL_GO_LINKER_FLAGS := ""
 GOHOSTOS = $(shell go env GOHOSTOS)
