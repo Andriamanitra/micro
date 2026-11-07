@@ -7,7 +7,7 @@ import (
 	"github.com/micro-editor/micro/v2/internal/screen"
 	"github.com/micro-editor/micro/v2/internal/shell"
 	"github.com/micro-editor/micro/v2/internal/util"
-	"github.com/micro-editor/terminal"
+	"go.mitchellh.com/libghostty"
 )
 
 type TermWindow struct {
@@ -31,7 +31,7 @@ func (w *TermWindow) Resize(width, height int) {
 	if config.GetGlobalOption("statusline").(bool) {
 		height--
 	}
-	w.Term.Resize(width, height)
+	w.Terminal.ResizeTerminal(width, height)
 	w.Width, w.Height = width, height
 }
 
@@ -63,33 +63,68 @@ func (w *TermWindow) SetView(v *View) {
 	w.View = v
 }
 
+func termColor(c libghostty.StyleColor) tcell.Color {
+	switch c.Tag {
+	case libghostty.StyleColorPalette:
+		return config.GetColor256(int(c.Palette))
+	case libghostty.StyleColorRGB:
+		return tcell.NewRGBColor(int32(c.RGB.R), int32(c.RGB.G), int32(c.RGB.B))
+	default:
+		return tcell.ColorDefault
+	}
+}
+
+func termStyle(s *libghostty.Style) tcell.Style {
+	st := tcell.StyleDefault.
+		Foreground(termColor(s.FgColor())).
+		Background(termColor(s.BgColor()))
+	if s.Bold() {
+		st = st.Bold(true)
+	}
+	if s.Faint() {
+		st = st.Dim(true)
+	}
+	if s.Italic() {
+		st = st.Italic(true)
+	}
+	if s.Blink() {
+		st = st.Blink(true)
+	}
+	if s.Inverse() {
+		st = st.Reverse(true)
+	}
+	if s.Strikethrough() {
+		st = st.StrikeThrough(true)
+	}
+	if s.Underline() != libghostty.UnderlineNone {
+		st = st.Underline(true)
+	}
+	if s.Invisible() {
+		st = st.Foreground(termColor(s.BgColor()))
+	}
+	return st
+}
+
 // Display displays this terminal in a view
 func (w *TermWindow) Display() {
-	w.State.Lock()
-	defer w.State.Unlock()
-
-	var l buffer.Loc
-	for y := 0; y < w.Height; y++ {
-		for x := 0; x < w.Width; x++ {
-			l.X, l.Y = x, y
-			c, f, b := w.State.Cell(x, y)
-
-			fg, bg := int(f), int(b)
-			if f == terminal.DefaultFG {
-				fg = int(tcell.ColorDefault)
-			}
-			if b == terminal.DefaultBG {
-				bg = int(tcell.ColorDefault)
-			}
-			st := tcell.StyleDefault.Foreground(config.GetColor256(fg)).Background(config.GetColor256(bg))
-
-			if l.LessThan(w.Selection[1]) && l.GreaterEqual(w.Selection[0]) || l.LessThan(w.Selection[0]) && l.GreaterEqual(w.Selection[1]) {
-				st = st.Reverse(true)
-			}
-
-			screen.SetContent(w.X+x, w.Y+y, c, nil, st)
+	w.Terminal.Render(func(x, y int, ch []byte, style *libghostty.Style) {
+		r := ' '
+		var combc []rune
+		if len(ch) > 0 {
+			runes := []rune(string(ch))
+			r = runes[0]
+			combc = runes[1:]
 		}
-	}
+
+		st := termStyle(style)
+		l := buffer.Loc{X: x, Y: y}
+		if l.LessThan(w.Selection[1]) && l.GreaterEqual(w.Selection[0]) || l.LessThan(w.Selection[0]) && l.GreaterEqual(w.Selection[1]) {
+			st = st.Reverse(true)
+		}
+
+		screen.SetContent(w.X+x, w.Y+y, r, combc, st)
+	})
+
 	if config.GetGlobalOption("statusline").(bool) {
 		statusLineStyle := config.DefStyle.Reverse(true)
 		if style, ok := config.Colorscheme["statusline"]; ok {
@@ -108,9 +143,9 @@ func (w *TermWindow) Display() {
 			}
 		}
 	}
-	if w.State.CursorVisible() && w.active {
-		curx, cury := w.State.Cursor()
-		if curx < w.Width && cury < w.Height {
+	if w.active {
+		curx, cury, visible := w.Terminal.Cursor()
+		if visible && curx < w.Width && cury < w.Height {
 			screen.ShowCursor(curx+w.X, cury+w.Y)
 		}
 	}

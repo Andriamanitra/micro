@@ -11,7 +11,6 @@ import (
 	"github.com/micro-editor/micro/v2/internal/display"
 	"github.com/micro-editor/micro/v2/internal/screen"
 	"github.com/micro-editor/micro/v2/internal/shell"
-	"github.com/micro-editor/terminal"
 )
 
 type TermKeyAction func(*TermPane)
@@ -105,7 +104,9 @@ func (t *TermPane) Tab() *Tab {
 	return t.tab
 }
 
-func (t *TermPane) Close() {}
+func (t *TermPane) Close() {
+	t.Terminal.Close()
+}
 
 // Quit closes this termpane
 func (t *TermPane) Quit() {
@@ -226,7 +227,7 @@ func (t *TermPane) HandleEvent(event tcell.Event) {
 		} else if t.Status != shell.TTDone {
 			t.WriteString(termPtyBytes(e, nk))
 		}
-	} else if e, ok := event.(*tcell.EventMouse); !ok || t.State.Mode(terminal.ModeMouseMask) {
+	} else if e, ok := event.(*tcell.EventMouse); !ok || t.MouseTracking() {
 		// t.WriteString(event.EscSeq())
 	} else {
 		x, y := e.Position()
