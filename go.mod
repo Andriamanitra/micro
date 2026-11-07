@@ -2,6 +2,7 @@ module github.com/micro-editor/micro/v2
 
 require (
 	github.com/blang/semver v3.5.1+incompatible
+	github.com/creack/pty v1.1.18
 	github.com/dustin/go-humanize v1.0.0
 	github.com/go-errors/errors v1.0.1
 	github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51
@@ -9,20 +10,19 @@ require (
 	github.com/mattn/go-runewidth v0.0.16
 	github.com/micro-editor/json5 v1.0.1-micro
 	github.com/micro-editor/tcell/v2 v2.0.13
-	github.com/micro-editor/terminal v0.0.0-20250324214352-e587e959c6b5
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/sergi/go-diff v1.1.0
 	github.com/stretchr/testify v1.4.0
 	github.com/yuin/gopher-lua v1.1.1
 	github.com/zyedidia/clipper v0.1.1
 	github.com/zyedidia/glob v0.0.0-20170209203856-dd4023a66dc3
+	go.mitchellh.com/libghostty v0.0.0-20261106041537-e247028bdf51
 	golang.org/x/text v0.4.0
 	gopkg.in/yaml.v2 v2.2.8
 	layeh.com/gopher-luar v1.0.11
 )
 
 require (
-	github.com/creack/pty v1.1.18 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/gdamore/encoding v1.0.0 // indirect
 	github.com/lucasb-eyer/go-colorful v1.0.3 // indirect
@@ -37,4 +37,4 @@ replace github.com/kballard/go-shellquote => github.com/micro-editor/go-shellquo
 
 replace layeh.com/gopher-luar v1.0.11 => github.com/layeh/gopher-luar v1.0.11
 
-go 1.19
+go 1.26.0
